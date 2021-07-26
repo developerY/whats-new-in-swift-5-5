@@ -10,6 +10,8 @@
 
 For example, we could define a `Weather` enum like this one:
 */
+import Foundation
+
 enum Weather: Codable {
     case sun
     case wind(speed: Int)

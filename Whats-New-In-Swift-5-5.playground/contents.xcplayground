@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<playground version='6.0' target-platform='ios' display-mode='rendered'>
-<pages>
-    <page name='Introduction'/>
+<playground version='6.0' target-platform='ios' display-mode='rendered' executeOnSourceChanges='true'>
+    <pages>
+        <page name='Introduction'/>
         <page name='Async await'/>
         <page name='Async sequences'/>
         <page name='Effectful read-only properties'/>

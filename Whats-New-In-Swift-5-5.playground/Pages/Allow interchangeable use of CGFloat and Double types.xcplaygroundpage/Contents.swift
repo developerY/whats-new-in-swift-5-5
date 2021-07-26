@@ -10,6 +10,10 @@
 
 In its simplest form, this means we can add a `CGFloat` and a `Double` together to produce a new `Double`, like this:
 */
+import Foundation
+import UIKit
+import CoreGraphics
+
 let first: CGFloat = 42
 let second: Double = 19
 let result = first + second

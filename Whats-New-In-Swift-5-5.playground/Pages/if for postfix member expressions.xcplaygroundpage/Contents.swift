@@ -10,6 +10,8 @@
 
 For example, this change allows us to create a text view with two different font sizes depending on whether we’re using iOS or another platform:
 */
+import SwiftUI
+
 Text("Welcome")
 #if os(iOS)
     .font(.largeTitle)

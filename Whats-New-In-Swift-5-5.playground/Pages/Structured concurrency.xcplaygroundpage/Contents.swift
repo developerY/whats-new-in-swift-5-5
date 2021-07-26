@@ -42,7 +42,7 @@ func fibonacci(of number: Int) -> Int {
 /*:
 The simplest async approach introduced by structured concurrency is the ability to use the `@main` attribute to go immediately into an async context, which is done simply by marking the `main()` method with `async`, like this:
 */
-@main
+//@main
 struct Main {
     static func main() async throws {
         let readings = try await getWeatherReadings(for: "London")
