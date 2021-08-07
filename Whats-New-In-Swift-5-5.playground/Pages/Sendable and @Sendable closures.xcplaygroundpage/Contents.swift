@@ -27,6 +27,7 @@ As for custom types, it depends what you’re making:
 Swift lets us use the `@Sendable` attribute on functions or closure to mark them as working concurrently, and will enforce various rules to stop us shooting ourself in the foot. For example, the operation we pass into the `Task` initializer is marked `@Sendable`, which means this kind of code is allowed because the value captured by `Task` is a constant:
 */
 import Foundation
+import SwiftUI
 
 func printScore() async {
     let score = 1 // var

@@ -11,6 +11,7 @@
 For example, this function returns its values asynchronously using a completion handler:
 */
 import Foundation
+import SwiftUI
 
 func fetchLatestNews(completion: @escaping ([String]) -> Void) {
     DispatchQueue.main.async {

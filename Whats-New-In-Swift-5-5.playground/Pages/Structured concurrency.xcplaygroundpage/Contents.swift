@@ -10,18 +10,26 @@
 
 For easier demonstration purposes, here are a couple of example functions we can work with – an async function to simulate fetching a certain number of weather readings for a particular location, and a synchronous function to calculate which number lies at a particular position in the Fibonacci sequence:
 */
+import Foundation
+import SwiftUI
+
 enum LocationError: Error {
     case unknown
+}
+
+func waitDoneBeforeNext() { // do not put async here :-)
+    sleep(2) // wait for 5 sec before letting next func start
+    print("\n\n")
 }
     
 func getWeatherReadings(for location: String) async throws -> [Double] {
     switch location {
     case "London":
-        return (1...100).map { _ in Double.random(in: 6...26) }
+        return (1...10).map { _ in Double.random(in: 6...26) }
     case "Rome":
-        return (1...100).map { _ in Double.random(in: 10...32) }
+        return (1...10).map { _ in Double.random(in: 10...32) }
     case "San Francisco":
-        return (1...100).map { _ in Double.random(in: 12...20) }
+        return (1...10).map { _ in Double.random(in: 12...20) }
     default:
         throw LocationError.unknown
     }
@@ -59,10 +67,10 @@ In its simplest form, you can start concurrent work by creating a new `Task` obj
 So, we might call `fibonacci(of:)` many times on a background thread, in order to calculate the first 50 numbers in the sequence:
 */
 func printFibonacciSequence() async {
-    let task1 = Task { () -> [Int] in
+    let task1 = Task { () -> [Int] in  // takes void and returns an array of Int
         var numbers = [Int]()
     
-        for i in 0..<50 {
+        for i in 0..<5 {
             let result = fibonacci(of: i)
             numbers.append(result)
         }
@@ -71,14 +79,27 @@ func printFibonacciSequence() async {
     }
     
     let result1 = await task1.value
-    print("The first 50 numbers in the Fibonacci sequence are: \(result1)")
+    print("Fibonacci sequence (5): \(result1)")
 }
+
+print("we start")
+Task.init {
+    await print("run Fib(5) ", printFibonacciSequence())
+}
+print("we end but the code is still running :-)")
+waitDoneBeforeNext()
 /*:
 As you can see, I’ve needed to explicitly write `Task { () -> [Int] in` so that Swift understands that the task is going to return, but if your task code is simpler that isn’t needed. For example, we could have written this and gotten exactly the same result:
 */
 let task1 = Task {
-    (0..<50).map(fibonacci)
+    (0..<12).map(fibonacci)
 }
+
+
+Task.init {
+    print("running task1 Fib(12) ", await task1.value)
+}
+waitDoneBeforeNext()
    
 /*:
 Again, the task starts running as soon as it’s created, and the `printFibonacciSequence()` function will continue running on whichever thread it was while the Fibonacci numbers are being calculated.
@@ -91,7 +112,7 @@ For task operations that throw uncaught errors, reading your task’s `value` pr
 */
 func runMultipleCalculations() async throws {
     let task1 = Task {
-        (0..<50).map(fibonacci)
+        (0..<7).map(fibonacci)
     }
     
     let task2 = Task {
@@ -100,9 +121,15 @@ func runMultipleCalculations() async throws {
     
     let result1 = await task1.value
     let result2 = try await task2.value
-    print("The first 50 numbers in the Fibonacci sequence are: \(result1)")
-    print("Rome weather readings are: \(result2)")
+    print("Fibonacci (7): \(result1)")
+    print("Rome weather: \(result2)")
 }
+
+Task.init {
+    // do { } catch not error?
+    print("multi task ", try await runMultipleCalculations())
+}
+waitDoneBeforeNext()
 /*:
 Swift provides us with the built-in task priorities of `high`, `default`, `low`, and `background`. The code above doesn’t specifically set one so it will get `default`, but we could have said something like `Task(priority: .high)` to customize that. If you’re writing just for Apple’s platforms, you can also use the more familiar priorities of `userInitiated` in place of high, and `utility` in place of `low`, but you *can’t* access `userInteractive` because that is reserved for the main thread.
 
@@ -116,8 +143,8 @@ You can see both sleeping and cancellation in the following code example, which 
 */
 func cancelSleepingTask() async {
     let task = Task { () -> String in
-        print("Starting")
-        await Task.sleep(1_000_000_000)
+        print("Starting Sleep/Cancle")
+        await Task.sleep(1_000_000_000) // sleep for 1 sec.
         try Task.checkCancellation()
         return "Done"
     }
@@ -126,12 +153,20 @@ func cancelSleepingTask() async {
     task.cancel()
     
     do {
-        let result = try await task.value
-        print("Result: \(result)")
+        let value = try await task.value
+        let result = await task.result
+        print("Value: \(value) with result \(result)")
     } catch {
-        print("Task was cancelled.")
+        print("Task was cancelled.", error)
     }
 }
+
+Task.init {
+    print("Calling sleeping/cancle task", await cancelSleepingTask())
+}
+waitDoneBeforeNext()
+
+
 /*:
 In that code, `Task.checkCancellation()` will realize the task has been cancelled and immediately throw `CancellationError`, but that won’t reach us until we attempt to read `task.value`.
 
@@ -145,25 +180,33 @@ To minimize the risk of programmers using task groups in dangerous ways, they do
 
 To see a simple example of how task groups work – along with demonstrating an important point of how they order their operations, try this:
 */
-func printMessage() async {
+func printTaskGroupMessage() async {
     let string = await withTaskGroup(of: String.self) { group -> String in
-        group.async { "Hello" }
-        group.async { "From" }
-        group.async { "A" }
-        group.async { "Task" }
-        group.async { "Group" }
+        group.addTask { "Hello" }
 
+        group.addTask { "From" }
+        group.addTask { "A" }
+
+        group.addTask { "Task" }
+        group.addTask { "Group" }
+        
         var collected = [String]()
 
         for await value in group {
             collected.append(value)
         }
-
-        return collected.joined(separator: " ")
+        let ans = collected.joined(separator: " ")
+        
+        return ans
     }
 
-    print(string)
+    print("This is the collected String: ",string)
 }
+
+Task.init{
+    print("Start Task Group Message: ", await printTaskGroupMessage())
+}
+waitDoneBeforeNext()
 /*:
 That creates a task group designed to produce one finished string, then queues up several closures using the `async()` method of the task group. Each of those closures returns a single string, which then gets collected into an array of strings, before being joined into one single string and returned for printing.
 
@@ -180,18 +223,21 @@ func printAllWeatherReadings() async {
         print("Calculating average weather…")
 
         let result = try await withThrowingTaskGroup(of: [Double].self) { group -> String in
-            group.async {
-                try await getWeatherReadings(for: "London")
+            group.addTask {
+                return try await getWeatherReadings(for: "London")
             }
 
-            group.async {
+            group.addTask {
                 try await getWeatherReadings(for: "Rome")
             }
 
-            group.async {
+            group.addTask {
                 try await getWeatherReadings(for: "San Francisco")
             }
-
+            
+            // Uncomment for error
+            // group.addTask {try await getWeatherReadings(for: "Not Here")}
+            
             // Convert our array of arrays into a single array of doubles
             let allValues = try await group.reduce([], +)
                 
@@ -205,11 +251,15 @@ func printAllWeatherReadings() async {
         print("Error calculating data.")
     }
 }
+
+Task.init{
+    print("Start Task Weather with error:", await printAllWeatherReadings())
+}
+waitDoneBeforeNext()
 /*:
 In that instance, each of the calls to `async()` is identical apart from the location string being passed in, so you can use something like `for location in ["London", "Rome", "San Francisco"] {` to call `async()` in a loop.
 
 Task groups have a `cancelAll()` method that cancels any tasks inside the group, but using `async()` afterwards will continue to add work to the group. As an alternative, you can use `asyncUnlessCancelled()` to skip adding work if the group has been cancelled – check its returned Boolean to see whether the work was added successfully or not.
-
 &nbsp;
 
 [< Previous](@previous)           [Home](Introduction)           [Next >](@next)

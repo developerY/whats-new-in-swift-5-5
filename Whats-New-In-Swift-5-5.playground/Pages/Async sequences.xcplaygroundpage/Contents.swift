@@ -12,6 +12,8 @@ Using `AsyncSequence` is almost identical to using `Sequence`, with the exceptio
 
 For example, we could make a `DoubleGenerator` sequence that starts from 1 and doubles its number every time it’s called:
 */
+import SwiftUI
+
 struct DoubleGenerator: AsyncSequence {
     typealias Element = Int
     
@@ -43,13 +45,29 @@ func printAllDoubles() async {
         print(number)
     }
 }
+
+print("We start")
+Task.init {await printAllDoubles()}
+print("Done")
+   
 /*:
 The `AsyncSequence` protocol also provides default implementations of a variety of common methods, such as `map()`, `compactMap()`, `allSatisfy()`, and more. For example, we could check whether our generator outputs a specific number like this:
 */
+let doubles = DoubleGenerator()
+
 func containsExactNumber() async {
-    let doubles = DoubleGenerator()
     let match = await doubles.contains(16_777_216)
-    print(match)
+    print("We found a match", match)
+}
+
+func containsEvenNumber() async {
+    let even = await doubles.reduce(0, +)
+    print("We found even", even)
+}
+
+Task.init {
+    await containsExactNumber()
+    await containsEvenNumber()
 }
 /*:
 Again, you need to be in an async context to use this.

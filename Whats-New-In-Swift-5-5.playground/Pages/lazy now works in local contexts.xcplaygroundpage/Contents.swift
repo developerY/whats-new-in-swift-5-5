@@ -10,6 +10,9 @@ The `lazy` keyword has always allowed us to write stored properties that are onl
 
 This code demonstrates local `lazy` in action:
 */
+import Foundation
+import SwiftUI
+
 func printGreeting(to: String) -> String {
     print("In printGreeting()")
     return "Hello, \(to)"

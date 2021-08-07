@@ -11,6 +11,7 @@
 To demonstrate this, we could create a `BundleFile` struct that attempts to load the contents of a file in our app’s resource bundle. Because the file might not be there, might be there but can’t be read for some reason, or might be readable but so big it takes time to read, we could mark the `contents` property as `async throws` like this:
 */
 import Foundation
+import SwiftUI
 
 enum FileError: Error {
     case missing, unreadable
@@ -39,6 +40,14 @@ Because `contents` is both async and throwing, we must use `try await` when tryi
 func printHighScores() async throws {
     let file = BundleFile(filename: "highscores")
     try await print(file.contents)
+}
+
+Task.init {
+    do {
+        print ("High scores bundle", try await printHighScores())
+    } catch {
+        print("Expected error: \(error).")
+    }
 }
 /*:
 

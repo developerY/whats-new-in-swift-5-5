@@ -13,11 +13,12 @@ To see how async/await helps the language, it’s helpful to look at how we solv
 For example, if we wanted to write code that fetched 100,000 weather records from a server, processes them to calculate the average temperature over time, then uploaded the resulting average back to a server, we might have written this:
 */
 import Foundation
+import SwiftUI
 
 func fetchWeatherHistory(completion: @escaping ([Double]) -> Void) {
     // Complex networking code here; we'll just send back 100,000 random temperatures
     DispatchQueue.global().async {
-        let results = (1...100_000).map { _ in Double.random(in: -10...30) }
+        let results = (1..<100).map { _ in Double.random(in: -10...30) }
         completion(results)
     }
 }
@@ -45,7 +46,7 @@ When it comes to using that code, we need to call them one by one in a chain, pr
 fetchWeatherHistory { records in
     calculateAverageTemperature(for: records) { average in
         upload(result: average) { response in
-            print("Server response: \(response)")
+            print("Grand Dispatch server: average \(average) response: \(response)")
         }
     }
 }
@@ -79,7 +80,11 @@ func processWeather() async {
     let records = await fetchWeatherHistory()
     let average = await calculateAverageTemperature(for: records)
     let response = await upload(result: average)
-    print("Server response: \(response)")
+    print("Task Server average: \(average) response:  \(response)")
+}
+
+Task.init{
+    await processWeather()
 }
 /*:
 As you can see, all the closures and indenting have gone, making for what is sometimes called “straight-line code” – apart from the `await` keywords, it looks just like synchronous code.

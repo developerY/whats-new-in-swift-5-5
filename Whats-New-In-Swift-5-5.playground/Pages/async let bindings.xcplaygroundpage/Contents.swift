@@ -10,7 +10,9 @@
 
 To demonstrate this, we could create a struct that has three different types of properties that will come from three different async functions:
 */
-import _Concurrency
+import Foundation
+import SwiftUI
+
 struct UserData {
     let username: String
     let friends: [String]
@@ -40,6 +42,10 @@ func printUserDetails() async {
     
     let user = await UserData(username: username, friends: friends, highScores: scores)
     print("Hello, my name is \(user.username), and I have \(user.friends.count) friends!")
+}
+
+Task.init {
+    await printUserDetails()
 }
 /*:
 **Important:** You can only use `async let` if you are already in an async context, and if you don’t explicitly await the result of an `async let` Swift will implicitly wait for it when exiting its scope.
