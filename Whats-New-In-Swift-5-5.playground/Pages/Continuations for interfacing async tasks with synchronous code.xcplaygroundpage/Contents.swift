@@ -13,6 +13,7 @@ For example, this function returns its values asynchronously using a completion 
 import Foundation
 import SwiftUI
 
+
 func fetchLatestNews(completion: @escaping ([String]) -> Void) {
     DispatchQueue.main.async {
         completion(["Swift 5.5 release", "Apple acquires Apollo"])

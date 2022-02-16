@@ -14,7 +14,7 @@ import Foundation
 import SwiftUI
 
 struct UserData {
-    let username: String
+    let name: String
     let friends: [String]
     let highScores: [Int]
 }
